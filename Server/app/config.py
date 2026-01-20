@@ -2,10 +2,6 @@ from pydantic_settings import BaseSettings
 from typing import List
 
 class Settings(BaseSettings):
-    """
-    Application configuration.
-    Reads from environment variables and .env file.
-    """
     
     # App Info
     APP_NAME: str = "Study Aid API"
@@ -18,16 +14,14 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str
     
-    # CORS - which domains can access our API
+    # CORS
     ALLOWED_ORIGINS: List[str] = [
-        "http://localhost:3000",  # React dev server
-        "http://localhost:5173",  # Vite dev server
+        "http://localhost:3000",  
+        "http://localhost:5173",  
     ]
     
     class Config:
-        # Tell Pydantic to read from .env file
         env_file = ".env"
         case_sensitive = True
 
-# Create a single settings instance
 settings = Settings()
