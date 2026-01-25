@@ -13,9 +13,13 @@ from app.schemas.user import TokenData
 
 # Password hashing configuration
 pwd_context = CryptContext(
-    schemes=["bcrypt"], 
-    deprecated="auto"
-    )
+    schemes=["argon2"], 
+    deprecated="auto",
+    argon2__type="id",            
+    argon2__time_cost=2,          
+    argon2__memory_cost=102400,   
+    argon2__parallelism=8
+)
 
 # URL path for obtaining jwt tokens
 oauth2_scheme = OAuth2PasswordBearer(
