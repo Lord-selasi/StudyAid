@@ -2,6 +2,7 @@ from sqlalchemy import String, Boolean, func
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.types import DateTime
 from app.db.base import Base
+from typing import Optional
 
 class User(Base):
     __tablename__ = "users"
@@ -14,8 +15,10 @@ class User(Base):
     created_at: Mapped[DateTime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
-    updated_at: Mapped[DateTime] = mapped_column(
-        DateTime(timezone=True), onupdate=func.now()
+    updated_at: Mapped[Optional[DateTime]] = mapped_column(
+        DateTime(timezone=True), 
+        server_default=func.now(),
+        onupdate=func.now()
     )
     
 
