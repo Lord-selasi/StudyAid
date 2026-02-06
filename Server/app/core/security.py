@@ -40,18 +40,18 @@ def get_password_hash(password: str) -> str:
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
 
-    paylod = data.copy()
+    payload = data.copy()
     
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
         expire = datetime.utcnow() + timedelta(minutes=15)
     
-    paylod.update({"exp": expire})
+    payload.update({"exp": expire})
     
     # Encode the token
     encoded_jwt = jwt.encode(
-        paylod, 
+        payload, 
         settings.SECRET_KEY, 
         algorithm=settings.ALGORITHM
     )
@@ -78,13 +78,15 @@ async def get_current_user(
         if user_id is None:
             raise credentials_exception
             
-        token_data = TokenData(user_id=user_id)
+        user_id = int(user_id)
         
     except JWTError:
         raise credentials_exception
+    except (ValueError, TypeError):  
+        raise credentials_exception
     
     # Get user from database
-    user = db.query(User).filter(User.id == token_data.user_id).first()
+    user = db.query(User).filter(User.id == user_id).first()
     
     if user is None:
         raise credentials_exception
