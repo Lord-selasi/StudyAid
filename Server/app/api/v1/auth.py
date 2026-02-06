@@ -5,7 +5,7 @@ from datetime import timedelta
 
 from app.db.session import get_db
 from app.models.user import User
-from app.schemas.user import UserCreate, UserResponse, Token
+from app.schemas.user import UserCreate, UserResponse, Token,ChangePassword
 from app.core.security import (
     get_password_hash, 
     verify_password,
@@ -80,17 +80,57 @@ async def login(
     # Create access token
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.id, "username": user.username},
+        data={"sub": str(user.id), "username": user.username},
         expires_delta=access_token_expires
     )
     
     return {
         "access_token": access_token,
         "token_type": "bearer",
-        "expires_in": settings.ACCESS_TOKEN_EXPIRE_MINUTES
+    }
+
+
+
+
+# Add this new endpoint
+@router.post("/change-password")
+async def change_password(
+    password_data: ChangePassword,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    
+    # Verify old password is correct
+    if not verify_password(password_data.old_password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect old password"
+        )
+    
+    # Check that new password is different from old
+    if password_data.old_password == password_data.new_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password must be different from old password"
+        )
+    
+    #  Hash the new password
+    new_hashed_password = get_password_hash(password_data.new_password)
+    
+    # Step 4: Update user in database
+    current_user.hashed_password = new_hashed_password
+    db.commit()
+    
+    # Step 5: Return success message
+    return {
+        "message": "Password changed successfully",
+        "status": "success"
     }
 
 @router.get("/me", response_model=UserResponse)
 async def get_current_user_info(current_user: User = Depends(get_current_user)):
     
     return current_user
+
+
+
