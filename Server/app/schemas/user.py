@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from pydantic import BaseModel, EmailStr, Field, ConfigDict, validator
 from datetime import datetime
 from typing import Optional
 
@@ -34,6 +34,39 @@ class UserUpdate(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    
+
+#schema for Password change
+class ChangePassword(BaseModel):
+    old_password: str = Field(..., min_length=3)
+    new_password: str = Field(..., min_length=8, max_length=72)
+    confirm_password: str = Field(..., min_length=8, max_length=72)
+
+  
+    
+    @validator('new_password')
+    def password_strength(cls, v):
+        
+        if len(v) < 8:
+            raise ValueError('Password must be at least 8 characters long')
+        
+        # Check for at least one number
+        if not any(char.isdigit() for char in v):
+            raise ValueError('Password must contain at least one number')
+        
+        # Check for at least one letter
+        if not any(char.isalpha() for char in v):
+            raise ValueError('Password must contain at least one letter')
+        
+        return v
+    
+    @validator('confirm_password')
+    def passwords_match(cls, v, values):
+        
+        if 'new_password' in values and v != values['new_password']:
+            raise ValueError('Passwords do not match')
+        return v
+
 
 class TokenData(BaseModel):
     user_id: Optional[int] = None
